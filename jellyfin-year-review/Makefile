@@ -5,6 +5,7 @@ check:
 	go test -race ./...
 	python3 -m unittest discover -s scripts -p 'test_*.py'
 	npm --prefix web run check
+	npm --prefix web run test:unit
 build:
 	npm --prefix web run build
 	go build -trimpath -o review ./cmd/review

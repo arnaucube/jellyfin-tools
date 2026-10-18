@@ -132,18 +132,23 @@ func (j *Jellyfin) Metadata(ctx context.Context, key string) ([]model.User, []mo
 				Name, Type, SeriesID, SeriesName string
 				ProductionYear                   int
 				RunTimeTicks                     int64
+				Studios                          []struct{ Name string }
 				Genres                           []string
 				ImageTags                        map[string]string
 				ProviderIDs                      map[string]string
 			}
 			TotalRecordCount int
 		}
-		path := fmt.Sprintf("/Items?Recursive=true&IncludeItemTypes=Movie,Episode,Series&Fields=Genres,ProviderIds&EnableImages=true&StartIndex=%d&Limit=500", start)
+		path := fmt.Sprintf("/Items?Recursive=true&IncludeItemTypes=Movie,Episode,Series&Fields=Genres,ProviderIds,Studios&EnableImages=true&StartIndex=%d&Limit=500", start)
 		if err := j.Call(ctx, "GET", path, key, "generator", nil, &page); err != nil {
 			return nil, nil, err
 		}
 		for _, i := range page.Items {
-			items = append(items, model.Item{ID: i.ID, Title: i.Name, Type: i.Type, SeriesID: i.SeriesID, SeriesTitle: i.SeriesName, Year: i.ProductionYear, Runtime: float64(i.RunTimeTicks) / 1e7, Genres: i.Genres, ImageTag: i.ImageTags["Primary"], ProviderIDs: i.ProviderIDs})
+			studios := []string{}
+			for _, studio := range i.Studios {
+				studios = append(studios, studio.Name)
+			}
+			items = append(items, model.Item{ID: i.ID, Title: i.Name, Type: i.Type, SeriesID: i.SeriesID, SeriesTitle: i.SeriesName, Year: i.ProductionYear, Runtime: float64(i.RunTimeTicks) / 1e7, Genres: i.Genres, Studios: studios, ImageTag: i.ImageTags["Primary"], ProviderIDs: i.ProviderIDs})
 		}
 		if start+len(page.Items) >= page.TotalRecordCount {
 			return result, items, nil

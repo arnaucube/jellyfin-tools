@@ -282,6 +282,7 @@ func Compute(s model.Snapshot, c Config) ([]model.Review, error) {
 		r.Genres = named(genres)
 		r.Devices = named(devices)
 		r.Clients = named(clients)
+		r.Platforms = platforms(r.Movies, r.Shows, items)
 		for i := range r.Movies {
 			v := &r.Movies[i]
 			if positionUnknown[v.ID] {

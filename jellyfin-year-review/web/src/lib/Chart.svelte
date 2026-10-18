@@ -1,6 +1,7 @@
 <script>
-  let { values, labels, metric = 'minutes' } = $props();
-  const fmt = (v) => new Intl.NumberFormat(undefined, { maximumFractionDigits: 1 }).format(v);
+  import { t, locale } from './i18n.js';
+  let { values, labels, metric = t("minutes") } = $props();
+  const fmt = (v) => new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }).format(v);
   let max = $derived(Math.max(1, ...values));
 </script>
 <ol class="chart" aria-label={metric}>

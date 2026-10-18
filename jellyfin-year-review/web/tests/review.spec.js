@@ -61,28 +61,30 @@ test('unavailable cards are skipped and chapter navigation updates when changing
   await page.getByLabel('Password', { exact: true }).fill('fixture-only');
   await page.getByRole('button', { name: 'Roll the credits' }).click();
   const chapters = page.getByRole('navigation', { name: 'Review chapters' });
-  await expect(chapters.getByRole('button')).toHaveCount(9);
-  await expect(chapters.getByRole('button', { name: /Your watch time|Unfinished movies|Your longest viewing session|Your viewing profile|Your watch-time ranking/ })).toHaveCount(0);
+  await expect(chapters.getByRole('button')).toHaveCount(10);
+  await expect(chapters.getByRole('button', { name: /Your watch time|Unfinished movies|Your longest viewing session|Your viewing profile|It's not a competition\.\.\. but this is your watch-time ranking/ })).toHaveCount(0);
   await page.getByRole('button', { name: 'View my recap' }).click();
   await expect(page.getByRole('heading', { name: 'Movies watched' })).toBeVisible();
   await page.locator('main').click({ position: { x: 5, y: 5 } });
   await page.keyboard.press('ArrowRight');
   await expect(page.getByRole('heading', { name: 'TV shows watched' })).toBeVisible();
   await page.getByRole('button', { name: 'Next chapter' }).click();
+  await expect(page.getByRole('heading', { name: "Shows you've watched are from platforms..." })).toBeVisible();
+  await page.getByRole('button', { name: 'Next chapter' }).click();
   await expect(page.getByRole('heading', { name: 'Your top genres' })).toBeVisible();
   await page.locator('main').click({ position: { x: 5, y: 5 } });
   await page.keyboard.press('End');
   await expect(page.getByRole('heading', { name: 'Your year in summary' })).toBeVisible();
-  await expect(page.locator('.story-bottom')).toContainText('09 / 9');
+  await expect(page.locator('.story-bottom')).toContainText('10 / 10');
   await expect(page.getByRole('button', { name: 'Next chapter' })).toBeDisabled();
   await expect(page.locator('.stat-grid')).not.toContainText('Your viewing profile');
   await page.getByLabel('Review year').selectOption('2024');
-  await expect(chapters.getByRole('button')).toHaveCount(14);
+  await expect(chapters.getByRole('button')).toHaveCount(15);
   await expect(page.getByRole('heading', { name: 'Your viewing recap' })).toBeVisible();
   await chapters.getByRole('button', { name: '5. Unfinished movies', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Unfinished movies' })).toBeVisible();
   await page.getByLabel('Review year').selectOption('2025');
-  await expect(chapters.getByRole('button')).toHaveCount(9);
+  await expect(chapters.getByRole('button')).toHaveCount(10);
   await expect(page.getByRole('heading', { name: 'Your viewing recap' })).toBeVisible();
 });
 
@@ -126,6 +128,42 @@ test('complete movie and show timelines include every title and support older ex
   await expect(page.locator('.viewing-timeline')).toHaveCount(0);
 });
 
+test('ranking celebrates on entry, clears on exit, and respects reduced motion', async ({ page }) => {
+  await page.route('**/api/review?year=*', async route => {
+    const response = await route.fetch();
+    const review = await response.json();
+    review.ranking = { rank: 3, cohort: 6, percentile: 40 };
+    review.availability.ranking.available = true;
+    await route.fulfill({ response, json: review });
+  });
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await page.goto('/review/2025');
+  await page.getByLabel('Jellyfin username').fill(offline ? 'Alice' : 'fixture');
+  await page.getByLabel('Password', { exact: true }).fill('fixture-only');
+  await page.getByRole('button', { name: 'Roll the credits' }).click();
+  await expect(page.getByRole('heading', { name: 'Your viewing recap' })).toBeVisible();
+  const confetti = page.locator('.confetti');
+  await expect(confetti).toHaveCount(0);
+  await page.getByRole('button', { name: /It's not a competition\.\.\. but this is your watch-time ranking$/ }).click();
+  await expect(confetti).toBeVisible();
+  await expect(confetti).toHaveAttribute('aria-hidden', 'true');
+  expect(await confetti.evaluate(element => {
+    const animations = element.getAnimations({ subtree: true });
+    if (!animations.length) return false;
+    for (const animation of animations) animation.finish();
+    return [...element.children].every(piece => piece.getBoundingClientRect().top > innerHeight);
+  })).toBeTruthy();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
+  await page.getByRole('button', { name: 'Next chapter' }).click();
+  await expect(confetti).toHaveCount(0);
+  await page.getByRole('button', { name: 'Previous chapter' }).click();
+  await expect(confetti).toBeVisible();
+  expect(await confetti.evaluate(element => element.getAnimations({ subtree: true }).some(animation => animation.playState === 'running'))).toBeTruthy();
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await expect(confetti).toBeHidden();
+  await expect(page.getByRole('heading', { name: "It's not a competition... but this is your watch-time ranking" })).toBeVisible();
+});
+
 test('anonymous ranking highlights your position and handles ties and edge positions', async ({ page }) => {
   let ranking = { rank: 3, cohort: 6, percentile: 40 };
   await page.route('**/api/review?year=*', async route => {
@@ -150,7 +188,7 @@ test('anonymous ranking highlights your position and handles ties and edge posit
   ]) {
     ranking = { rank: sample.rank, cohort: sample.cohort, percentile: sample.percentile };
     await page.reload();
-    await page.getByRole('button', { name: /Your watch-time ranking$/ }).click();
+    await page.getByRole('button', { name: /It's not a competition\.\.\. but this is your watch-time ranking$/ }).click();
     await expect(chart.getByRole('listitem')).toHaveCount(sample.cohort);
     await expect(chart.getByRole('listitem', { name: `You: rank ${sample.rank} of ${sample.cohort}`, exact: true })).toHaveCount(1);
     await expect(chart.locator('.above')).toHaveCount(sample.above);
@@ -162,4 +200,50 @@ test('anonymous ranking highlights your position and handles ties and edge posit
     if (sample.cohort === 1) await expect(chart).toContainText('You are the only eligible viewer.');
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
   }
+});
+
+test('platform card shows only TV show counts and handles missing data', async ({ page }) => {
+  let mode = 'populated';
+  await page.route('**/api/review?year=*', async route => {
+    const response = await route.fetch();
+    const review = await response.json();
+    if (mode === 'populated' || mode === 'old-label') review.platforms = [
+      { name: 'Netflix', movies: 3, shows: 2 },
+      { name: 'HBO', movies: 0, shows: 1 },
+      { name: 'Apple TV+', movies: 1, shows: 0 },
+      { name: 'Other', movies: 20, shows: 1 }
+    ];
+    else delete review.platforms;
+    if (mode === 'old-label') {
+      review.platforms.pop();
+      review.platforms.unshift({ name: 'Unknown platform', movies: 20, shows: 1 });
+    }
+    if (mode === 'empty') review.records = 0;
+    await route.fulfill({ response, json: review });
+  });
+  await page.goto('/review/2025');
+  await page.getByLabel('Jellyfin username').fill(offline ? 'Alice' : 'fixture');
+  await page.getByLabel('Password', { exact: true }).fill('fixture-only');
+  await page.getByRole('button', { name: 'Roll the credits' }).click();
+  await page.getByRole('button', { name: /Shows you've watched are from platforms\.\.\.$/ }).click();
+  const table = page.getByRole('table', { name: 'TV shows watched by platform' });
+  await expect(table.getByRole('columnheader')).toHaveText(['Platform', 'TV shows']);
+  for (const [name, shows] of [['Netflix', '2'], ['HBO', '1'], ['Apple TV+', '0'], ['Other', '1']]) {
+    const row = table.getByRole('row').filter({ has: page.getByRole('rowheader', { name, exact: true }) });
+    await expect(row.getByRole('cell')).toHaveText([shows]);
+  }
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
+  await expect(table.getByRole('rowheader').last()).toHaveText('Other');
+  mode = 'old-label';
+  await page.reload();
+  await page.getByRole('button', { name: /Shows you've watched are from platforms\.\.\.$/ }).click();
+  await expect(table.getByRole('rowheader')).toHaveText(['Netflix', 'HBO', 'Apple TV+', 'Other']);
+  mode = 'legacy';
+  await page.reload();
+  await page.getByRole('button', { name: /Shows you've watched are from platforms\.\.\.$/ }).click();
+  await expect(page.getByText('Platform data is unavailable for this review. Regenerate the year to include it.')).toBeVisible();
+  mode = 'empty';
+  await page.reload();
+  await page.getByRole('button', { name: /Shows you've watched are from platforms\.\.\.$/ }).click();
+  await expect(page.getByText('No TV shows watched this year.')).toBeVisible();
 });

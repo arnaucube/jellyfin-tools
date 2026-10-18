@@ -35,6 +35,8 @@ type Item struct {
 	Year        int               `json:"year,omitempty"`
 	Runtime     float64           `json:"runtimeSeconds,omitempty"`
 	Genres      []string          `json:"genres"`
+	Studios     []string          `json:"studios,omitempty"`
+	Platforms   []string          `json:"platforms,omitempty"`
 	ImageTag    string            `json:"imageTag,omitempty"`
 	ProviderIDs map[string]string `json:"providerIds,omitempty"`
 	Poster      string            `json:"poster,omitempty"`
@@ -73,6 +75,13 @@ type Named struct {
 	Name    string  `json:"name"`
 	Seconds float64 `json:"seconds"`
 	Records int     `json:"records"`
+}
+
+// Platform counts distinct watched movies and series associated with a service.
+type Platform struct {
+	Name   string `json:"name"`
+	Movies int    `json:"movies"`
+	Shows  int    `json:"shows"`
 }
 type Content struct {
 	ID           string   `json:"id"`
@@ -124,6 +133,7 @@ type Review struct {
 	ActiveDays         int                     `json:"activeDays"`
 	Movies             []Content               `json:"movies"`
 	Shows              []Content               `json:"shows"`
+	Platforms          []Platform              `json:"platforms,omitempty"`
 	Abandoned          []Content               `json:"abandoned"`
 	Genres             []Named                 `json:"genres"`
 	Devices            []Named                 `json:"devices"`

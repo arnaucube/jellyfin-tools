@@ -1,4 +1,5 @@
 <script>
+  import { t } from './i18n.js';
   let { ranking } = $props();
   let above = $derived(ranking.rank - 1);
   // The percentile counts strictly lower totals, excluding the current viewer.
@@ -10,26 +11,26 @@
     ...Array.from({ length: tied }, () => 'tied'),
     ...Array.from({ length: below }, () => 'below')
   ]);
-  const labels = { above: 'Viewer with more watch time', tied: 'Viewer with the same watch time', below: 'Viewer with less watch time' };
+  const labels = { above: t("Viewer with more watch time"), tied: t("Viewer with the same watch time"), below: t("Viewer with less watch time") };
 </script>
 
 <figure class="ranking-position">
-  <figcaption>Your position among {ranking.cohort} {ranking.cohort === 1 ? 'viewer' : 'viewers'}</figcaption>
-  {#if ranking.cohort > 1}<div class="ranking-direction" aria-hidden="true"><span>Most watch time</span><span>Least watch time →</span></div>{/if}
-  <ol aria-label="Viewers ordered from most to least watch time">
+  <figcaption>{t(ranking.cohort === 1 ? "Your position among {count} viewer" : "Your position among {count} viewers", { count: ranking.cohort })}</figcaption>
+  {#if ranking.cohort > 1}<div class="ranking-direction" aria-hidden="true"><span>{t("Most watch time")}</span><span>{t("Least watch time →")}</span></div>{/if}
+  <ol aria-label={t("Viewers ordered from most to least watch time")}>
     {#each viewers as kind, i (i)}
-      <li class={kind} aria-label={kind === 'you' ? `You: rank ${ranking.rank} of ${ranking.cohort}` : labels[kind]} aria-current={kind === 'you' ? 'true' : undefined}>
+      <li class={kind} aria-label={kind === 'you' ? t("You: rank {rank} of {count}", { rank: ranking.rank, count: ranking.cohort }) : labels[kind]} aria-current={kind === 'you' ? 'true' : undefined}>
         <span class="viewer-icon">
           <svg viewBox="0 0 32 40" aria-hidden="true"><circle cx="16" cy="10" r="7" /><path d="M3 36v-6a13 13 0 0 1 26 0v6Z" /></svg>
         </span>
-        {#if kind === 'you'}<strong>You</strong>{/if}
+        {#if kind === 'you'}<strong>{t("You")}</strong>{/if}
       </li>
     {/each}
   </ol>
   {#if ranking.cohort === 1}
-    <p>You are the only eligible viewer.</p>
+    <p>{t("You are the only eligible viewer.")}</p>
   {:else}
-    <p>{above} above you · {tied} tied with you · {below} below you</p>
+    <p>{t("{above} above you · {tied} tied with you · {below} below you", { above, tied, below })}</p>
   {/if}
 </figure>
 

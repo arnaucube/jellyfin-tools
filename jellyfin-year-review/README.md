@@ -2,6 +2,58 @@
 
 Run these commands from the project directory.
 
+## Translate the webapp
+
+Edit [`web/src/lib/translations.json`](web/src/lib/translations.json). It includes
+Catalan (`ca`) and English (`en`). Set the top-level `language` to select the
+language used by the webapp. Catalan is selected by default:
+
+```json
+{
+  "language": "ca",
+  "languages": {
+    "ca": {
+      "locale": "ca",
+      "direction": "ltr",
+      "strings": {
+        "Sign out": "Tanca la sessió"
+      }
+    },
+    "en": {
+      "locale": "en",
+      "direction": "ltr",
+      "strings": {
+        "Sign out": "Sign out"
+      }
+    }
+  }
+}
+```
+
+This example shows only one string; keep the full catalogs in the actual file.
+To use English, change only `"language": "ca"` to `"language": "en"`.
+An unknown language reports a configuration error.
+
+To add another language, copy a catalog under `languages` with a new language
+code. Under its `strings`, keep the English keys and translate the values.
+Keep placeholders such as `{year}`, `{name}`, and `{count}` unchanged; you can
+move them within the sentence. `\n` adds a line break in the sign-in heading.
+Each catalog's `locale` controls numbers, dates, and the page language; it does
+not select the catalog. Set `direction` to `rtl` for right-to-left languages,
+or keep `ltr`.
+
+The file covers interface text, accessibility labels, months and weekdays,
+viewing profiles, and known server errors and review warnings. Usernames, media
+titles, and other source data stay as supplied. To translate custom source or
+coverage descriptions and genre labels, add their exact original text as a key.
+Missing entries fall back to the original text. Values are plain text, not HTML.
+
+Run `npm --prefix web run test:unit` to check translations and placeholders,
+then `npm --prefix web run build` and restart the serving process. For Docker,
+rebuild the image using the Compose command below. Language selection and
+translation edits apply to everyone using that build; no review data needs to
+be regenerated.
+
 ## 1. Generate review data
 
 Requires Go 1.27.2, `psql`, and native Jellystat history. Copy `.env.example` to
