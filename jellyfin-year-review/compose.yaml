@@ -1,0 +1,43 @@
+services:
+  review:
+    image: reel-review:1.0.0
+    build: .
+    user: "${REVIEW_UID:-10001}:${REVIEW_GID:-10001}"
+    restart: unless-stopped
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    environment:
+      APP_ORIGIN: ${APP_ORIGIN:?Set APP_ORIGIN}
+      JELLYFIN_URL: ${JELLYFIN_URL:?Set JELLYFIN_URL}
+    volumes:
+      - ./data:/data:ro
+    ports:
+      - "127.0.0.1:8080:8080"
+    networks: [media]
+    mem_limit: 256m
+    cpus: 1
+  generate:
+    image: reel-review:1.0.0
+    build: .
+    profiles: [tools]
+    user: "${REVIEW_UID:-10001}:${REVIEW_GID:-10001}"
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    environment:
+      JELLYFIN_URL: ${JELLYFIN_URL:?Set JELLYFIN_URL}
+      JELLYFIN_API_KEY: ${JELLYFIN_API_KEY:-}
+      REVIEW_TIMEZONE: ${REVIEW_TIMEZONE:-UTC}
+    volumes:
+      - ./data:/data
+      - ./cache:/cache
+      - ./input:/input:ro
+    networks: [media]
+    command: [generate, --year, "2025", --input, /input/snapshot.json, --output, /data, --cache, /cache]
+    mem_limit: 1g
+    cpus: 2
+networks:
+  media:
+    external: true
+    name: ${JELLYFIN_NETWORK:-media}

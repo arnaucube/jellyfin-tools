@@ -1,4 +1,4 @@
-# Jellyfin update webpage
+# jellyfin-news
 
 A small Go web server for generating copyable Jellyfin movie and episode recaps. It serves one embedded `index.html` page, a database, or third-party Go dependencies.
 

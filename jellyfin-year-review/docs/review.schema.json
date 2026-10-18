@@ -1,0 +1,494 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:reel-review:review:1",
+  "title": "Owner-visible Reel Review v1",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "rules": {
+      "type": "object",
+      "properties": {
+        "minimumSeconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "completionPercent": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 100
+        },
+        "marathonGapSeconds": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 86400
+        }
+      },
+      "required": [
+        "minimumSeconds",
+        "completionPercent",
+        "marathonGapSeconds"
+      ],
+      "additionalProperties": false
+    },
+    "user": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{32}$"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ],
+      "additionalProperties": false
+    },
+    "year": {
+      "type": "integer",
+      "minimum": 1970,
+      "maximum": 9998
+    },
+    "timezone": {
+      "type": "string"
+    },
+    "generatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "source": {
+      "type": "string"
+    },
+    "coverage": {
+      "type": "string"
+    },
+    "availability": {
+      "type": "object",
+      "required": [
+        "exactWatchTime",
+        "completion",
+        "marathon",
+        "personality",
+        "ranking"
+      ],
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "available": {
+            "type": "boolean"
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "available"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "seconds": {
+      "type": "number",
+      "minimum": 0
+    },
+    "movieSeconds": {
+      "type": "number",
+      "minimum": 0
+    },
+    "tvSeconds": {
+      "type": "number",
+      "minimum": 0
+    },
+    "records": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "uniqueTitles": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "activeDays": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "movies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "poster": {
+            "type": "string",
+            "pattern": "^/art/[a-f0-9]{64}\\.jpg$"
+          },
+          "seconds": {
+            "type": "number",
+            "minimum": 0
+          },
+          "records": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "completionPercent": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "seconds",
+          "records"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "shows": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "poster": {
+            "type": "string",
+            "pattern": "^/art/[a-f0-9]{64}\\.jpg$"
+          },
+          "seconds": {
+            "type": "number",
+            "minimum": 0
+          },
+          "records": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "completionPercent": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "seconds",
+          "records"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "abandoned": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "poster": {
+            "type": "string",
+            "pattern": "^/art/[a-f0-9]{64}\\.jpg$"
+          },
+          "seconds": {
+            "type": "number",
+            "minimum": 0
+          },
+          "records": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "completionPercent": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "seconds",
+          "records"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "genres": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "seconds": {
+            "type": "number",
+            "minimum": 0
+          },
+          "records": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "name",
+          "seconds",
+          "records"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "devices": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "seconds": {
+            "type": "number",
+            "minimum": 0
+          },
+          "records": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "name",
+          "seconds",
+          "records"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "clients": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "seconds": {
+            "type": "number",
+            "minimum": 0
+          },
+          "records": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "name",
+          "seconds",
+          "records"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "distributionMetric": {
+      "enum": [
+        "watched minutes",
+        "activity record ends (counts)"
+      ]
+    },
+    "marathon": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "start": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "end": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "watchedSeconds": {
+              "type": "number",
+              "minimum": 0
+            },
+            "elapsedSeconds": {
+              "type": "number",
+              "minimum": 0
+            },
+            "records": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "start",
+            "end",
+            "watchedSeconds",
+            "elapsedSeconds",
+            "records"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "personality": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "enum": [
+                "Night Owl",
+                "Early Bird",
+                "Weekend Warrior",
+                "Marathoner",
+                "Binge Watcher",
+                "Movie Buff",
+                "Series Devotee",
+                "Comfort Rewatcher",
+                "Genre Explorer",
+                "Prime-Time Regular",
+                "Daily Viewer",
+                "Seasonal Viewer",
+                "Short-Session Viewer",
+                "Balanced Viewer"
+              ]
+            },
+            "explanation": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "name",
+            "explanation"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "ranking": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "rank": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "cohort": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "percentile": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "averageSeconds": {
+              "type": "number",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "rank",
+            "cohort",
+            "percentile",
+            "averageSeconds"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "hourly": {
+      "type": "array",
+      "items": {
+        "type": "number",
+        "minimum": 0
+      },
+      "minItems": 24,
+      "maxItems": 24
+    },
+    "weekdays": {
+      "type": "array",
+      "items": {
+        "type": "number",
+        "minimum": 0
+      },
+      "minItems": 7,
+      "maxItems": 7
+    },
+    "monthly": {
+      "type": "array",
+      "items": {
+        "type": "number",
+        "minimum": 0
+      },
+      "minItems": 12,
+      "maxItems": 12
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "rules",
+    "user",
+    "year",
+    "timezone",
+    "generatedAt",
+    "source",
+    "coverage",
+    "availability",
+    "seconds",
+    "movieSeconds",
+    "tvSeconds",
+    "records",
+    "uniqueTitles",
+    "activeDays",
+    "movies",
+    "shows",
+    "abandoned",
+    "genres",
+    "devices",
+    "clients",
+    "distributionMetric",
+    "marathon",
+    "personality",
+    "ranking",
+    "warnings",
+    "hourly",
+    "weekdays",
+    "monthly"
+  ],
+  "additionalProperties": false
+}

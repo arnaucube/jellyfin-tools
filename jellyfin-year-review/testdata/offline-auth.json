@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "sourceVersion": "12.2",
+  "exportedAt": "2026-01-01T00:00:00Z",
+  "users": [
+    {
+      "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "username": "Alice",
+      "passwordHash": "$PBKDF2-SHA512$iterations=210000$00112233445566778899AABBCCDDEEFF$E2923DBF9936103DFABC5D3966A54BCE0710FCB120AD39312233FF3C006338FCE720F97B0595CCD5E96F1605DFAF7E2D0370ED54D7F451BD16885637E70BBB66",
+      "disabled": false
+    },
+    {
+      "id": "cccccccccccccccccccccccccccccccc",
+      "username": "Legacy",
+      "passwordHash": "$PBKDF2$iterations=1000$00112233445566778899AABBCCDDEEFF$2955556E34CF42367AD3669D140ECA65451A1FC1AC3D5E2059B675825D60FD32",
+      "disabled": false
+    },
+    {
+      "id": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "username": "Disabled",
+      "passwordHash": "",
+      "disabled": true
+    }
+  ]
+}

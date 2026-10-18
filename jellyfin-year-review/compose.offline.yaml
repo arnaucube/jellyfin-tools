@@ -1,0 +1,22 @@
+# Standalone remote serving: no Jellyfin URL, shared media network, or generator.
+services:
+  review:
+    image: reel-review:1.0.0
+    build: .
+    user: "${REVIEW_UID:-10001}:${REVIEW_GID:-10001}"
+    restart: unless-stopped
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    environment:
+      APP_ORIGIN: ${APP_ORIGIN:?Set APP_ORIGIN}
+      REVIEW_AUTH_MODE: offline
+      REVIEW_AUTH_FILE: /auth/users.json
+    volumes:
+      - ./data:/data:ro
+      # Mount the directory so atomic file replacements are visible immediately.
+      - ./auth:/auth:ro
+    ports:
+      - "0.0.0.0:8080:8080"
+    mem_limit: 256m
+    cpus: 1
