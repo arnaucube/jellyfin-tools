@@ -40,11 +40,11 @@
 {/if}
 
 <style>
-  .viewing-timeline { margin-top: 32px; padding-left: 24px; border-left: 2px solid currentColor; }
+  .viewing-timeline { margin-top: 32px; padding-left: 24px; border-left: 2px solid rgba(var(--accent-rgb), .25); }
   .timeline-month { position: relative; padding-bottom: 28px; }
   .timeline-month:last-child { padding-bottom: 0; }
-  .timeline-month::before { content: ''; position: absolute; width: 10px; height: 10px; border-radius: 50%; background: currentColor; left: -30px; top: 6px; }
-  h3 { font-size: 1.2rem; margin-bottom: 16px; }
+  .timeline-month::before { content: ''; position: absolute; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 14px rgba(var(--accent-rgb), .6); left: -30px; top: 6px; }
+  h3 { color: var(--accent); font-size: 1.2rem; margin-bottom: 16px; }
   .timeline-titles { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 16px 24px; }
   li { display: flex; align-items: center; gap: 14px; min-width: 0; }
   h4 { margin: 0; font-size: 1rem; line-height: 1.5; overflow-wrap: anywhere; }

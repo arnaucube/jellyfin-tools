@@ -45,7 +45,7 @@
   .above .viewer-icon { opacity: .65; }
   .below .viewer-icon { opacity: .3; }
   .tied .viewer-icon { border-color: currentColor; border-style: dashed; }
-  .you .viewer-icon { background: #202436; color: white; box-shadow: 0 0 0 3px #fff9; }
-  strong { font-weight: 800; }
+  .you .viewer-icon { background: rgba(var(--accent-rgb), .12); color: var(--accent); border-color: var(--accent); box-shadow: 0 0 0 3px rgba(var(--accent-rgb), .08), 0 0 28px rgba(var(--accent-rgb), .25); }
+  strong { color: var(--accent); font-weight: 800; }
   p { font-size: 12px; margin: 12px 0 0; }
 </style>

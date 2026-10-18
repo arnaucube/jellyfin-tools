@@ -196,7 +196,32 @@ test('anonymous ranking highlights your position and handles ties and edge posit
     await expect(chart.locator('.below')).toHaveCount(sample.below);
     await expect(chart).not.toContainText(offline ? 'Alice' : 'Fixture Viewer');
     await expect(chart.locator('a')).toHaveCount(0);
-    if (sample.rank === 3) await chart.screenshot({ path: 'test-results/ranking-mobile.png' });
+    if (sample.rank === 3) {
+      await chart.screenshot({ path: 'test-results/ranking-mobile.png' });
+      await expect(page.getByText('Your total watch time compared with other eligible viewers.', { exact: true })).toHaveCount(0);
+      const title = page.getByRole('heading', { name: "It's not a competition... but this is your watch-time ranking" });
+      await expect(title.locator('span')).toHaveText(["It's not a competition...", 'but this is your watch-time ranking']);
+      const headingSizes = await title.locator('span').evaluateAll(elements => elements.map(element => parseFloat(getComputedStyle(element).fontSize)));
+      expect(headingSizes[1]).toBeLessThan(headingSizes[0]);
+      expect(headingSizes[1]).toBeGreaterThan(headingSizes[0] * .8);
+      const highlights = page.locator('.ranking-highlights');
+      await expect(highlights.locator('.ranking-value')).toHaveText(['#3', '12 h']);
+      for (const width of [390, 1440, 320]) {
+        await page.setViewportSize({ width, height: 1000 });
+        const metrics = await highlights.locator('.big-stat').evaluateAll(elements => elements.map(element => {
+          const box = element.getBoundingClientRect();
+          const value = element.querySelector('.ranking-value');
+          return { x: box.x, y: box.y, fontSize: parseFloat(getComputedStyle(value).fontSize) };
+        }));
+        expect(metrics[1].x).toBeGreaterThan(metrics[0].x);
+        expect(metrics[1].y).toBe(metrics[0].y);
+        const secondarySize = await page.locator('.ranking-secondary b').evaluate(element => parseFloat(getComputedStyle(element).fontSize));
+        expect(metrics[1].fontSize).toBeGreaterThan(secondarySize);
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
+        await page.locator('.story').screenshot({ path: `test-results/ranking-highlights-${width}.png` });
+      }
+      await page.setViewportSize({ width: 390, height: 844 });
+    }
     if (sample.cohort === 1) await expect(chart).toContainText('You are the only eligible viewer.');
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
   }
@@ -246,4 +271,68 @@ test('platform card shows only TV show counts and handles missing data', async (
   await page.reload();
   await page.getByRole('button', { name: /Shows you've watched are from platforms\.\.\.$/ }).click();
   await expect(page.getByText('No TV shows watched this year.')).toBeVisible();
+});
+
+test('card swipes follow navigation direction and respect reduced motion', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await page.goto('/review/2025');
+  await page.getByLabel('Jellyfin username').fill(offline ? 'Alice' : 'fixture');
+  await page.getByLabel('Password', { exact: true }).fill('fixture-only');
+  await page.getByRole('button', { name: 'Roll the credits' }).click();
+  await expect(page.getByRole('heading', { name: 'Your viewing recap' })).toBeVisible();
+
+  // Sample the start of each animation so direction checks do not depend on timing.
+  async function entryOffset() {
+    return page.locator('.story-body').evaluate(element => {
+      const animation = element.getAnimations()[0];
+      if (!animation) throw new Error('Expected a card swipe animation');
+      animation.pause();
+      animation.currentTime = 0;
+      const offset = new DOMMatrixReadOnly(getComputedStyle(element).transform).m41;
+      animation.finish();
+      return offset;
+    });
+  }
+  async function swipe(dx, dy = 0) {
+    await page.locator('.story').evaluate((element, { dx, dy }) => {
+      element.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerType: 'touch', clientX: 180, clientY: 250 }));
+      window.dispatchEvent(new PointerEvent('pointerup', { pointerType: 'touch', clientX: 180 + dx, clientY: 250 + dy }));
+    }, { dx, dy });
+  }
+
+  await page.getByRole('button', { name: 'Next chapter' }).click();
+  await expect(page.getByRole('heading', { name: 'Your watch time', exact: true })).toBeVisible();
+  expect(await entryOffset()).toBeGreaterThan(0);
+  await page.getByRole('button', { name: 'Previous chapter' }).click();
+  await expect(page.getByRole('heading', { name: 'Your viewing recap' })).toBeVisible();
+  expect(await entryOffset()).toBeLessThan(0);
+
+  await swipe(-120);
+  await expect(page.getByRole('heading', { name: 'Your watch time', exact: true })).toBeVisible();
+  expect(await entryOffset()).toBeGreaterThan(0);
+  await swipe(120);
+  await expect(page.getByRole('heading', { name: 'Your viewing recap' })).toBeVisible();
+  expect(await entryOffset()).toBeLessThan(0);
+  await swipe(-20, 120);
+  await expect(page.getByRole('heading', { name: 'Your viewing recap' })).toBeVisible();
+
+  await page.locator('main').click({ position: { x: 5, y: 5 } });
+  await page.keyboard.press('ArrowRight');
+  await expect(page.getByRole('heading', { name: 'Your watch time', exact: true })).toBeVisible();
+  expect(await entryOffset()).toBeGreaterThan(0);
+  await page.getByRole('button', { name: /Your year in summary$/ }).click();
+  await expect(page.getByRole('heading', { name: 'Your year in summary' })).toBeVisible();
+  expect(await entryOffset()).toBeGreaterThan(0);
+  await page.getByRole('button', { name: 'View recap again ↺' }).click();
+  await expect(page.getByRole('heading', { name: 'Your viewing recap' })).toBeVisible();
+  expect(await entryOffset()).toBeLessThan(0);
+  await swipe(120);
+  await expect(page.getByRole('button', { name: 'Previous chapter' })).toBeDisabled();
+  expect(await page.locator('.story-body').evaluate(element => element.getAnimations().some(animation => animation.playState === 'running'))).toBe(false);
+
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.getByRole('button', { name: 'Next chapter' }).click();
+  await expect(page.getByRole('heading', { name: 'Your watch time', exact: true })).toBeVisible();
+  expect(await page.locator('.story-body').evaluate(element => element.getAnimations().length)).toBe(0);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
 });

@@ -43,8 +43,8 @@
   th:first-child { width: 54%; }
   thead th:not(:first-child), td { text-align: right; }
   tbody th { font-weight: 600; overflow-wrap: anywhere; }
-  td { font-variant-numeric: tabular-nums; }
-  .platform-bar { display: flex; height: .35rem; margin-top: .6rem; border-radius: 1rem; overflow: hidden; }
-  .shows { width: 100%; background: #69dfce; }
+  td { color: var(--accent); font-size: 1.25rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .platform-bar { display: flex; height: .35rem; margin-top: .6rem; border-radius: 1rem; box-shadow: 0 0 12px rgba(var(--accent-rgb), .22); overflow: hidden; }
+  .shows { width: 100%; background: linear-gradient(90deg, rgba(var(--accent-rgb), .45), var(--accent)); }
   .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 </style>
