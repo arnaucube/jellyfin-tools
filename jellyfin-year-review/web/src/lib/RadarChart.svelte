@@ -44,14 +44,14 @@
 
 <style>
   .radar-chart { width: 100%; max-width: 850px; margin: 36px 0 0; }
-  figcaption { font-size: 1rem; font-weight: 700; }
+  figcaption { color: var(--accent); font-size: 1rem; font-weight: 700; }
   .radar-plot { position: relative; max-width: 650px; margin: 0 auto; }
   svg { display: block; width: 100%; height: auto; }
-  .grid-ring { fill: none; stroke: currentColor; stroke-opacity: .2; }
+  .grid-ring { fill: none; stroke: currentColor; stroke-opacity: .18; }
   .axis { stroke: currentColor; stroke-opacity: .15; }
-  .radar-area { fill: currentColor; fill-opacity: .18; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; }
-  .radar-line { fill: none; stroke: currentColor; stroke-width: 2; }
-  .radar-point { fill: currentColor; }
+  .radar-area { fill: var(--accent); fill-opacity: .16; stroke: var(--accent); filter: drop-shadow(0 0 8px rgba(var(--accent-rgb), .3)); stroke-width: 2; stroke-linejoin: round; }
+  .radar-line { fill: none; stroke: var(--accent); stroke-width: 2; }
+  .radar-point { fill: var(--accent); filter: drop-shadow(0 0 5px var(--accent)); }
   .scale { fill: currentColor; font-size: 10px; opacity: .65; }
   .axis-label { position: absolute; transform: translate(-50%, -50%); width: 23%; display: flex; flex-direction: column; gap: 3px; text-align: center; font-size: clamp(10px, 1.3vw, 14px); line-height: 1.2; overflow-wrap: anywhere; }
   .axis-label b { display: -webkit-box; line-clamp: 2; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }

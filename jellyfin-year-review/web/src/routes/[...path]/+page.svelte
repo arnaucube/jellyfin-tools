@@ -12,6 +12,7 @@
   let user = $state(null), years = $state([]), year = $state(''), review = $state(null);
   let loading = $state(true), signingIn = $state(false), error = $state(''), notice = $state('');
   let username = $state(''), password = $state(''), slide = $state(0);
+  let swipeDirection = $state(0);
   let touch = null, request = 0;
   let authMode = $state('jellyfin');
   const chapters = [
@@ -58,7 +59,7 @@
   async function loadReview() {
     if (!year) return;
     const current = ++request;
-    loading = true; error = ''; review = null; slide = 0;
+    loading = true; error = ''; review = null; slide = 0; swipeDirection = 0;
     try {
       const data = await api(`/api/review?year=${encodeURIComponent(year)}`);
       if (current !== request) return;
@@ -93,13 +94,20 @@
     catch (e) { notice = e.message; }
     finally { request++; user = null; review = null; years = []; password = ''; history.replaceState(null, '', '/'); }
   }
-  function navigate(delta) { slide = Math.max(0, Math.min(cards.length - 1, slide + delta)); }
+  // Route every navigation method through the same direction and boundary rules.
+  function goTo(index) {
+    const next = Math.max(0, Math.min(cards.length - 1, index));
+    if (next === slide) return;
+    swipeDirection = next > slide ? 1 : -1;
+    slide = next;
+  }
+  function navigate(delta) { goTo(slide + delta); }
   function keydown(event) {
     if (!review || interactive(event.target) || event.altKey || event.ctrlKey || event.metaKey) return;
     if (event.key === 'ArrowRight') { event.preventDefault(); navigate(1); }
     if (event.key === 'ArrowLeft') { event.preventDefault(); navigate(-1); }
-    if (event.key === 'Home') { event.preventDefault(); slide = 0; }
-    if (event.key === 'End') { event.preventDefault(); slide = cards.length - 1; }
+    if (event.key === 'Home') { event.preventDefault(); goTo(0); }
+    if (event.key === 'End') { event.preventDefault(); goTo(cards.length - 1); }
   }
   function pointerdown(event) { if (event.pointerType === 'touch' && !interactive(event.target)) touch = { x: event.clientX, y: event.clientY }; }
   function pointerup(event) {
@@ -134,7 +142,8 @@
     {#if !user}
       <section class="login-layout" aria-label={t("Sign in")}>
         <form class="login-panel" onsubmit={login}>
-          <h1 style="white-space: pre-line">{t("Your year,\nreplayed.")}</h1><p>{t("Sign in with your existing Jellyfin account.")}</p>
+          <h1 class="login-title">{t("Jellyfin recap")}</h1>
+          <h2 class="login-tagline" style="white-space: pre-line">{t("Your year,\nreplayed.")}</h2><p>{t("Sign in with your existing Jellyfin account.")}</p>
           {#if notice}<p class="message" role="status">{notice}</p>{/if}
           {#if error}<div class="message error" role="alert">{error}</div>{/if}
           <label for="username">{t("Jellyfin username")}</label><input id="username" name="username" autocomplete="username" required maxlength="256" bind:value={username} />
@@ -149,10 +158,12 @@
       <section class="state-screen"><p class="eyebrow">{t("NOT QUITE SHOWTIME")}</p><h1>{t("Your story is on its way.")}</h1><p>{t("No review has been generated for your account. Ask your server operator to generate a year.")}</p><button class="primary" onclick={bootstrap}>{t("Check again")}</button></section>
     {:else if review}
       <div class="review-meta"><span>{review.year} / {user.name}</span></div>
-      <nav class="progress" aria-label={t("Review chapters")}>{#each cards as chapter, i}<button class:active={slide === i} class:visited={slide > i} aria-label="{i + 1}. {chapter.name}" aria-current={slide === i ? 'step' : undefined} onclick={() => slide = i}><span></span></button>{/each}</nav>
+      <nav class="progress" aria-label={t("Review chapters")}>{#each cards as chapter, i}<button class:active={slide === i} class:visited={slide > i} aria-label="{i + 1}. {chapter.name}" aria-current={slide === i ? 'step' : undefined} onclick={() => goTo(i)}><span></span></button>{/each}</nav>
       <section class="story tone-{slide % 4}" aria-roledescription={t("carousel")} aria-label={t("Your yearly review")} onpointerdown={pointerdown}>
         <div class="story-orbit" aria-hidden="true"></div>
-        <div class="story-body" aria-live="polite" aria-atomic="true">
+        <div class="story-content" aria-live="polite" aria-atomic="true">
+        {#key card}
+        <div class="story-body" style:--swipe-from="{swipeDirection * 105}%">
           <p class="eyebrow">{t("CHAPTER {number} / {name}", { number: String(slide + 1).padStart(2, '0'), name: cards[slide].name.toLocaleUpperCase(locale) })}</p>
           {#if card === 0}
             <span class="year-stamp">{review.year}</span><h1>{t("Your viewing recap")}</h1><p class="story-lede">{t(review.records ? "{name}, see the movies, TV shows, and viewing habits that made up your year." : "{name}, no viewing activity was recorded for this year.", { name: user.name })}</p><button class="primary" onclick={() => navigate(1)}>{t("View my recap")} <span aria-hidden="true">→</span></button><span class="giant-play" aria-hidden="true">▶</span>
@@ -192,10 +203,20 @@
           {:else if card === 11}
             <h2>{t("Your viewing profile")}</h2>{#if review.personality}<span class="personality-symbol" aria-hidden="true">✳</span><h3 class="personality-name">{message(review.personality.name)}</h3><p class="story-lede">{message(review.personality.explanation)}</p>{:else}<p class="empty-note">{message(review.availability.personality.reason)}</p>{/if}
           {:else if card === 12}
-            <h2>{t("It's not a competition... but this is your watch-time ranking")}</h2><p>{t("Your total watch time compared with other eligible viewers.")}</p>{#if review.ranking}<div class="big-stat">#{review.ranking.rank}<span>{t("of {count} eligible viewers", { count: count(review.ranking.cohort) })}</span></div><RankingPosition ranking={review.ranking} /><div class="stat-grid"><div><b>{Math.round(review.ranking.percentile)}%</b><span>{t("Viewers with less watch time")}</span></div><div><b>{duration(review.seconds)}</b><span>{t("Your total hours watched · movies & TV shows")}</span></div></div>{:else}<p class="empty-note">{message(review.availability.ranking.reason)}</p>{/if}
+            <h2 class="ranking-title"><span>{t("It's not a competition...")}</span>{' '}<span class="ranking-subtitle">{t("but this is your watch-time ranking")}</span></h2>
+            {#if review.ranking}
+              <div class="ranking-highlights">
+                <div class="big-stat"><span class="ranking-value">#{review.ranking.rank}</span><span>{t("of {count} eligible viewers", { count: count(review.ranking.cohort) })}</span></div>
+                <div class="big-stat"><span class="ranking-value">{hours(review.seconds)} <small>{t("h")}</small></span><span>{t("Your total hours watched · movies & TV shows")}</span></div>
+              </div>
+              <RankingPosition ranking={review.ranking} />
+              <div class="stat-grid ranking-secondary"><div><b>{Math.round(review.ranking.percentile)}%</b><span>{t("Viewers with less watch time")}</span></div></div>
+            {:else}<p class="empty-note">{message(review.availability.ranking.reason)}</p>{/if}
           {:else}
-            <p class="year-stamp">{t("SUMMARY / {year}", { year: review.year })}</p><h2>{t("Your year in summary")}</h2><div class="stat-grid">{#if review.availability.exactWatchTime.available !== false}<div><b>{duration(review.seconds)}</b><span>{t("Your watch time")}</span></div>{/if}{#if review.availability.personality.available !== false}<div><b>{message(review.personality?.name) || t("No viewing profile")}</b><span>{t("Your viewing profile")}</span></div>{/if}</div><p class="story-lede">{t("You have reached the end of your viewing recap.")}</p><button class="primary" onclick={() => slide = 0}>{t("View recap again ↺")}</button>
+            <p class="year-stamp">{t("SUMMARY / {year}", { year: review.year })}</p><h2>{t("Your year in summary")}</h2><div class="stat-grid">{#if review.availability.exactWatchTime.available !== false}<div><b>{duration(review.seconds)}</b><span>{t("Your watch time")}</span></div>{/if}{#if review.availability.personality.available !== false}<div><b>{message(review.personality?.name) || t("No viewing profile")}</b><span>{t("Your viewing profile")}</span></div>{/if}</div><p class="story-lede">{t("You have reached the end of your viewing recap.")}</p><button class="primary" onclick={() => goTo(0)}>{t("View recap again ↺")}</button>
           {/if}
+        </div>
+        {/key}
         </div>
         <div class="story-bottom"><span>{String(slide + 1).padStart(2, '0')} <span class="muted">/ {cards.length}</span></span><div class="story-controls"><button aria-label={t("Previous chapter")} onclick={() => navigate(-1)} disabled={slide === 0}>←</button><button aria-label={t("Next chapter")} onclick={() => navigate(1)} disabled={slide === cards.length - 1}>→</button></div></div>
       </section>

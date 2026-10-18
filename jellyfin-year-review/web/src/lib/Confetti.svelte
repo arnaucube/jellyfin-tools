@@ -1,5 +1,5 @@
 <script>
-  const colors = ['#c5f76b', '#a78bfa', '#ff7869', '#ffd166', '#65d6ed', '#ff86c8'];
+  const colors = ['#a5f3d1', '#b9b5ff', '#ffd0ad', '#fff0a8', '#a8e8f5', '#ffb5df'];
   // Spread a short shower across the viewport, with varied timing and tumbling.
   const pieces = Array.from({ length: 90 }, (_, i) => ({
     left: (i * 37) % 100,
